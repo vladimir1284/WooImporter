@@ -10,6 +10,7 @@ from utils.db_helper import ProductManager
 # Logger will be configured externally
 logger = logging.getLogger(__name__)
 
+
 class FileProcessor:
     """Process input files and store records in database."""
 
@@ -111,7 +112,7 @@ class FileProcessor:
                         ):
                             url = first_value
 
-                    if url and url not in urls:  # Avoid duplicates
+                    if url and url not in urls:  # Avoid duplicates within the same file
                         urls.append(url)
 
             logger.info(f"Extracted {len(urls)} unique URLs from CSV: {file_path.name}")
@@ -121,9 +122,32 @@ class FileProcessor:
             logger.error(f"Error extracting URLs from CSV {file_path}: {e}")
             return []
 
+    def url_exists_in_database(self, url: str) -> bool:
+        """
+        Check if a URL already exists in the database.
+
+        Args:
+            url: URL to check
+
+        Returns:
+            bool: True if URL exists, False otherwise
+        """
+        try:
+            existing_record = (
+                InputFiles.select()
+                .where(
+                    (InputFiles.origin_info == url) & (InputFiles.file_type == "csv")
+                )
+                .first()
+            )
+            return existing_record is not None
+        except Exception as e:
+            logger.error(f"Error checking if URL exists in database: {e}")
+            return False
+
     def process_csv_file(self, file_path: Path) -> bool:
         """
-        Process CSV file - extract URLs and store in database.
+        Process CSV file - extract URLs and store each as separate record if not exists.
 
         Args:
             file_path: Path to the CSV file
@@ -134,46 +158,44 @@ class FileProcessor:
         try:
             logger.info(f"Processing CSV file: {file_path}")
 
-            # Check if file already exists in database
-            existing_file = (
-                InputFiles.select()
-                .where(
-                    (InputFiles.filename == file_path.name)
-                    & (InputFiles.file_type == "csv")
-                )
-                .first()
-            )
-
-            if existing_file:
-                logger.info(f"CSV file already exists in database: {file_path.name}")
-                return True
-
             # Extract URLs from CSV
             urls = self.extract_urls_from_csv(file_path)
 
             if not urls:
                 logger.warning(f"No URLs found in CSV file: {file_path.name}")
-                # Still create a record but mark as processed with no URLs
-                urls_text = None
-            else:
-                urls_text = "\n".join(urls)
+                return True
 
             # Get file information
             file_size, _ = self.get_file_info(file_path)
 
-            # Create database record
-            input_file_record = ProductManager.create_input_file(
-                filename=file_path.name,
-                file_path=str(file_path),
-                file_type="csv",
-                origin_info=urls_text,
-            )
+            # Process each URL individually
+            new_urls_count = 0
+            skipped_urls_count = 0
 
-            # Update status to processed
-            ProductManager.update_input_file_status(input_file_record.id, "processed")
+            for url in urls:
+                # Check if URL already exists in database
+                if self.url_exists_in_database(url):
+                    logger.debug(f"URL already exists in database, skipping: {url}")
+                    skipped_urls_count += 1
+                    continue
+
+                # Create separate database record for each URL
+                input_file_record = ProductManager.create_input_file(
+                    filename=file_path.name,  # Original CSV filename
+                    file_path=str(file_path),  # Original CSV file path
+                    file_type="csv",
+                    origin_info=url,  # Store individual URL
+                )
+
+                # Update status to processed
+                ProductManager.update_input_file_status(
+                    input_file_record.id, "processed"
+                )
+                new_urls_count += 1
 
             logger.info(
-                f"Successfully stored CSV file info with {len(urls) if urls else 0} URLs: {file_path.name}"
+                f"CSV processing completed: {new_urls_count} new URLs stored, "
+                f"{skipped_urls_count} duplicate URLs skipped from file: {file_path.name}"
             )
             return True
 
