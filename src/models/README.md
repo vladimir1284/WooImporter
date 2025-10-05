@@ -108,6 +108,7 @@ erDiagram
     input_files ||--o{ processing_logs : "logs"
     products ||--o{ product_benefits : "has"
     products ||--o{ product_natural_ingredients : "has"
+    products ||--o{ product_categories : "has"
     products ||--o{ product_excluded_chemicals : "has"
     products ||--o{ product_images : "has"
     products ||--o{ processing_logs : "logs"
