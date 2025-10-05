@@ -2,6 +2,7 @@
 MercadoLibre-specific web scraper for product data extraction.
 """
 
+import json
 import re
 import logging
 from typing import Dict, List, Optional
@@ -37,6 +38,9 @@ class MercadoLibreScraper(BaseProductExtractor):
             logger.error("Failed to get HTML content")
             return self.base_structure
 
+        # Get categories
+        categories = self._extract_categories(html_content)
+
         # Parse HTML
         soup = self.scraper.parse_html(html_content)
 
@@ -46,6 +50,9 @@ class MercadoLibreScraper(BaseProductExtractor):
         # Parse into structured format
         structured_data = self._parse_structured_data(raw_product_data)
 
+        # Get categories
+        structured_data["categories"] = self._extract_categories(html_content)
+        
         # Add source information
         if not from_file:
             structured_data["source_url"] = source
@@ -81,7 +88,6 @@ class MercadoLibreScraper(BaseProductExtractor):
         product_data["description"] = self._extract_description(soup)
 
         return product_data
-
 
     def _extract_images(self, soup) -> List[str]:
         """Extract product images from the gallery, excluding storage/logos"""
@@ -159,6 +165,24 @@ class MercadoLibreScraper(BaseProductExtractor):
                 return content.get_text(strip=True)
 
         return None
+
+    def _extract_categories(self, content: str) -> list[str]:
+        """
+        Extrae la lista de nombres de categorías (pathFromRoot)
+        a partir del contenido HTML o JSON de una página de producto de Mercado Libre.
+        """
+        # Busca el fragmento JSON que contiene "pathFromRoot"
+        match = re.search(r'"pathFromRoot":(\[.*?\])', content)
+        if not match:
+            return []
+
+        # Parsea el JSON encontrado
+        try:
+            path_from_root = json.loads(match.group(1))
+            categories = [item["name"] for item in path_from_root]
+            return categories
+        except Exception:
+            return []
 
     def _parse_structured_data(self, product_data: Dict) -> Dict:
         """Parse the extracted data into a more structured format"""
