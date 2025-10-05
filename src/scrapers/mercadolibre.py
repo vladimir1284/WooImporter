@@ -82,8 +82,9 @@ class MercadoLibreScraper(BaseProductExtractor):
 
         return product_data
 
+
     def _extract_images(self, soup) -> List[str]:
-        """Extract product images from the gallery"""
+        """Extract product images from the gallery, excluding storage/logos"""
         images = []
 
         # Find all image elements in the gallery
@@ -94,7 +95,7 @@ class MercadoLibreScraper(BaseProductExtractor):
             if src and not src.startswith("data:image/gif"):
                 # Clean up the URL to get the highest quality version
                 clean_src = self.scraper.clean_image_url(src)
-                if clean_src and clean_src not in images:
+                if clean_src and clean_src not in images and "/storage/" not in clean_src:
                     images.append(clean_src)
 
         return images
