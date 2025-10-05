@@ -110,6 +110,19 @@ class ProductNaturalIngredients(BaseModel):
         table_name = "product_natural_ingredients"
 
 
+class ProductCategories(BaseModel):
+    product = ForeignKeyField(
+        Products,
+        backref="categories",
+        column_name="product_id",
+        on_delete="CASCADE",
+    )
+    category = CharField()
+
+    class Meta:
+        table_name = "product_categories"
+
+
 class ProductExcludedChemicals(BaseModel):
     product = ForeignKeyField(
         Products,
@@ -187,6 +200,7 @@ def create_tables():
             [
                 InputFiles,
                 Products,
+                ProductCategories,
                 ProductBenefits,
                 ProductNaturalIngredients,
                 ProductExcludedChemicals,

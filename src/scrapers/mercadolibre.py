@@ -6,7 +6,7 @@ import json
 import re
 import logging
 from typing import Dict, List, Optional
-from web_scraper import WebScraper, BaseProductExtractor
+from scrapers.web_scraper import BaseProductExtractor
 
 logger = logging.getLogger(__name__)
 

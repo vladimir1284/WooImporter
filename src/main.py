@@ -12,6 +12,7 @@ import logging
 
 from models.models import create_tables
 from utils.input_process import FileProcessor
+from utils.process_files import process_pending_files
 
 # Configure logging
 def setup_logging():
@@ -40,6 +41,7 @@ def main():
     create_tables()
     processor = FileProcessor()
     processor.run()
+    process_pending_files()
 
 
 if __name__ == "__main__":

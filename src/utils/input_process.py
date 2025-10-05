@@ -1,4 +1,3 @@
-from sqlite3 import OperationalError
 from typing import Optional, List
 from pathlib import Path
 import csv

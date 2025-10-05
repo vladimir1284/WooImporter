@@ -56,6 +56,12 @@ erDiagram
         text ingredient
     }
 
+    product_categories {
+        integer id PK
+        integer product_id FK
+        text category
+    }
+
     product_excluded_chemicals {
         integer id PK
         integer product_id FK

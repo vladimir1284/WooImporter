@@ -11,6 +11,18 @@
             "request": "launch",
             "program": "src/scrapers/mercadolibre.py",
             "console": "integratedTerminal"
+        },
+
+        {
+            "name": "Main",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "src/main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "python": "${workspaceFolder}/.venv/bin/python"
         }
     ]
 }
