@@ -40,7 +40,7 @@ def process_pending_files():
 
     for input_file in pending_files:
         logger.info(
-            f"Processing file: {input_file.filename} (ID: {input_file.id}, Type: {input_file.file_type})"
+            f"Processing file: {input_file.origin_info} (ID: {input_file.id}, Type: {input_file.file_type})"
         )
 
         try:
@@ -51,14 +51,16 @@ def process_pending_files():
             # Determine from_file parameter based on file type
             from_file = input_file.file_type == "html"
             logger.info(
-                f"Extracting data from: {input_file.file_path} (from_file={from_file})"
+                f"Extracting data from: {input_file.origin_info} (from_file={from_file})"
             )
 
             # Extract data from file with appropriate from_file parameter
-            structured_data = scraper.extract(input_file.file_path, from_file=from_file)
+            structured_data = scraper.extract(
+                input_file.origin_info, from_file=from_file
+            )
 
             if not structured_data:
-                logger.warning(f"No data extracted from {input_file.filename}")
+                logger.warning(f"No data extracted from {input_file.origin_info}")
                 input_file.status = "failed"
                 input_file.error_message = "No data extracted from file"
                 input_file.save()
@@ -96,20 +98,20 @@ def process_pending_files():
                 input_file.status = "processed"
                 input_file.processed_at = datetime.datetime.now()
                 logger.info(
-                    f"Successfully processed {input_file.filename} with {processed_count} products"
+                    f"Successfully processed {input_file.origin_info} with {processed_count} products"
                 )
             else:
                 input_file.status = "processed" if processed_count > 0 else "failed"
                 input_file.processed_at = datetime.datetime.now()
                 logger.warning(
-                    f"Completed {input_file.filename} with {processed_count} successful "
+                    f"Completed {input_file.origin_info} with {processed_count} successful "
                     f"and {error_count} failed products"
                 )
 
             input_file.save()
 
         except Exception as e:
-            logger.error(f"Error processing file {input_file.filename}: {str(e)}")
+            logger.error(f"Error processing file {input_file.origin_info}: {str(e)}")
             input_file.status = "failed"
             input_file.error_message = str(e)
             input_file.save()

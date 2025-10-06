@@ -186,11 +186,7 @@ class FileProcessor:
                     file_type="csv",
                     origin_info=url,  # Store individual URL
                 )
-
-                # Update status to processed
-                ProductManager.update_input_file_status(
-                    input_file_record.id, "processed"
-                )
+                
                 new_urls_count += 1
 
             logger.info(
