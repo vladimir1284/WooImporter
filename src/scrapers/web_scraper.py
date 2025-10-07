@@ -3,10 +3,11 @@ General web scraper utilities for fetching and parsing web content.
 Provides common extraction patterns and a base structure for scraped data.
 """
 
-import requests
 from bs4 import BeautifulSoup
 import logging
 from typing import Dict, List, Optional
+
+from utils.page_downloader import get_html_source
 
 # Logger will be configured externally
 logger = logging.getLogger(__name__)
@@ -18,19 +19,16 @@ class WebScraper:
     and provides common extraction utilities.
     """
 
-    def __init__(self, headers: Optional[Dict] = None, timeout: int = 10):
+    def __init__(self, addition_delay=10000, timeout=30000):
         """
         Initialize the web scraper.
 
         Args:
-            headers: HTTP headers for requests
+            addition_delay: Settle time for downloading source of the page
             timeout: Request timeout in seconds
         """
-        self.headers = headers or {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
+        self.addition_delay = addition_delay
         self.timeout = timeout
-        self.session = requests.Session()
 
     def get_content(self, source: str, from_file: bool = False) -> Optional[str]:
         """
@@ -50,11 +48,10 @@ class WebScraper:
                     return file.read()
             else:
                 logger.info(f"Fetching content from URL: {source}")
-                response = self.session.get(
-                    source, headers=self.headers, timeout=self.timeout
+                html = get_html_source(
+                    source, addition_delay=self.addition_delay, timeout=self.timeout
                 )
-                response.raise_for_status()
-                return response.text
+                return html
 
         except Exception as e:
             logger.error(f"Error getting content from {source}: {str(e)}")

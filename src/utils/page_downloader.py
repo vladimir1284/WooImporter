@@ -7,7 +7,7 @@ chrome_executable_path = (
 )
 
 
-def obtener_html_completo(url, espera_adicional=10000, timeout=30000):
+def get_html_source(url, addition_delay=10000, timeout=30000):
     """
     Espera a que el DOM se estabilice antes de extraer el HTML.
     """
@@ -22,8 +22,8 @@ def obtener_html_completo(url, espera_adicional=10000, timeout=30000):
             page.goto(url, wait_until="domcontentloaded", timeout=timeout)
 
             # Esperar tiempo adicional para contenido dinámico
-            if espera_adicional > 0:
-                page.wait_for_timeout(espera_adicional)
+            if addition_delay > 0:
+                page.wait_for_timeout(addition_delay)
 
             # Esperar a que no haya cambios en el DOM por un período
             page.wait_for_function(
@@ -71,7 +71,7 @@ def obtener_html_completo(url, espera_adicional=10000, timeout=30000):
 if __name__ == "__main__":
     # Ejemplo básico
     url = "https://www.mercadolibre.com.mx/aceite-loreal-elvive-aceite-extraordinario-reparacion-de-puntas/p/MLM24750853#polycard_client=recommendations_pdp-p2p&reco_backend=odin-uni-p2p-supermarket-repurchase_supermarket&reco_model=retrieval-ranker-complementarios&reco_client=pdp-p2p&reco_item_pos=0&reco_backend_type=low_level&reco_id=d57a33ad-517d-4757-8607-1efc927a3851&wid=MLM1710516068&sid=recos"
-    html = obtener_html_completo(url)
+    html = get_html_source(url)
 
     if html:
         print(f"HTML obtenido correctamente. Longitud: {len(html)} caracteres")
